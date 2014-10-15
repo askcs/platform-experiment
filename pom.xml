@@ -5,7 +5,7 @@
 	<groupId>com.askcs.platform</groupId>
 	<artifactId>platform</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<packaging>pom</packaging>
+	<packaging>war</packaging>
 	
 	<properties>
 		<eve.version>3.0.0</eve.version>
