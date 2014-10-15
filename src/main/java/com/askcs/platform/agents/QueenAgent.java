@@ -21,6 +21,10 @@ public class QueenAgent extends Agent {
 		return agent.getId();
 	}
 	
+	public void deletePersonalAgent(@Name("agentId") String agentId) {
+		deleteAgent(agentId);
+	}
+	
 	public List<String> getAgents() {
 		List<String> agents = getState().get("agents", new TypeUtil<List<String>>(){});
 		if(agents==null) {

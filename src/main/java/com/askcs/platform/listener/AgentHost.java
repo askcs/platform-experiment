@@ -169,8 +169,12 @@ public class AgentHost {
 		return null;
 	}
 	
-	public void deleteAgent() {
-		// TODO: implement
+	public void deleteAgent(String id) {
+		Agent agent = getAgent(id);
+		if(agent!=null) {
+			agent.getState().delete();
+			this.agents.remove(id);
+		}
 	}
 	
 	public Agent getAgent(String id) {

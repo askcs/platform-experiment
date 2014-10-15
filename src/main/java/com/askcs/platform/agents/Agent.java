@@ -12,6 +12,10 @@ public class Agent extends com.almende.eve.agent.Agent {
 		return getAgentHost().createAgent(agentClass, agentId);
 	}
 	
+	public void deleteAgent(String agentId) {
+		getAgentHost().deleteAgent(agentId);
+	}
+	
 	protected AgentHost getAgentHost() {
 		return AgentHost.getInstance();
 	}
