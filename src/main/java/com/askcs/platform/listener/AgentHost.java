@@ -28,7 +28,7 @@ public class AgentHost {
 	private static AgentHost agentHost = null;
 	private Map<String, Agent> agents = null;
 	private AgentConfig config = null;
-	
+		
 	public static final AgentHost getInstance() {
 		if(agentHost==null) {
 			agentHost = new AgentHost();
@@ -117,23 +117,24 @@ public class AgentHost {
 		// Assumption??
 		FileStateConfig stateConfig = new FileStateConfig(this.config.getState());
 		File folder = new File(stateConfig.getPath());
-		for (final File fileEntry : folder.listFiles()) {
-	        if (!fileEntry.isDirectory()) {
-	        	stateConfig.setId(fileEntry.getName());
-	        	State state = new StateBuilder().withConfig(stateConfig).build();
-	        	
-	        	ObjectNode ac = state.get("config", ObjectNode.class);
-	        	if(ac!=null) {
-		        	AgentConfig agentConfig = new AgentConfig(ac);
-					Agent newAgent = (Agent) new AgentBuilder().withWakeService(ws)
-							.withClassLoader(cl).with(agentConfig).build();
-					newAgent.storeConfig();
-					LOG.info("Created agent:" + newAgent.getId());
-					this.agents.put(newAgent.getId(), newAgent);
-	        	}
-	        }
-	    }
-		
+		if(folder.listFiles()!=null) {
+			for (final File fileEntry : folder.listFiles()) {
+		        if (!fileEntry.isDirectory()) {
+		        	stateConfig.setId(fileEntry.getName());
+		        	State state = new StateBuilder().withConfig(stateConfig).build();
+		        	
+		        	ObjectNode ac = state.get("config", ObjectNode.class);
+		        	if(ac!=null) {
+			        	AgentConfig agentConfig = new AgentConfig(ac);
+						Agent newAgent = (Agent) new AgentBuilder().withWakeService(ws)
+								.withClassLoader(cl).with(agentConfig).build();
+						newAgent.storeConfig();
+						LOG.info("Created agent:" + newAgent.getId());
+						this.agents.put(newAgent.getId(), newAgent);
+		        	}
+		        }
+		    }
+		}
 		
 		
 		final ArrayNode agents = (ArrayNode) config.get("agents");
