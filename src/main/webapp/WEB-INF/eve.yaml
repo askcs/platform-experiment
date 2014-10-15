@@ -1,0 +1,22 @@
+templates:
+   defaultAgent:
+      state:
+         class: com.almende.eve.state.file.FileStateBuilder
+         path: .eveagents
+         json: true
+      scheduler:
+         class: com.almende.eve.scheduling.PersistentSchedulerBuilder
+         state:
+           class: com.almende.eve.state.file.FileStateBuilder
+           json: true
+           id: testScheduling
+      transport:
+         class: com.almende.eve.transport.http.HttpTransportBuilder
+         servletUrl: http://localhost:8080/agents/
+         doAuthentication: false
+         
+         
+agents:
+-  id: queen
+   class: com.askcs.platform.agents.QueenAgent
+   extends: templates/defaultAgent
