@@ -33,4 +33,11 @@ public class PlatformListener extends EveListener {
 		}
 		
 	}
+	
+	@Override
+	public void contextDestroyed(ServletContextEvent sce) {
+		AgentHost ah = AgentHost.getInstance();
+		ah.unloadAgents();
+		System.gc();
+	}
 }

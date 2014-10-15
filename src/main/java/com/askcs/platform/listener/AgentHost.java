@@ -150,6 +150,10 @@ public class AgentHost {
 		}
 	}
 	
+	public void unloadAgents() {
+		this.agents.clear();
+	}
+	
 	@SuppressWarnings("unchecked")
 	public <T extends Agent> T createAgent(String agentClassName, String agentId) throws ClassNotFoundException {
 		return (T) createAgent((Class<T>) Class.forName(agentClassName), agentId);
