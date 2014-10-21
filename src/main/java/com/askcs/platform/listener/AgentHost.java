@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -12,7 +13,6 @@ import java.util.logging.Logger;
 import com.almende.eve.agent.AgentBuilder;
 import com.almende.eve.agent.AgentConfig;
 import com.almende.eve.capabilities.Config;
-import com.almende.eve.capabilities.wake.WakeService;
 import com.almende.eve.config.YamlReader;
 import com.almende.eve.state.State;
 import com.almende.eve.state.StateBuilder;
@@ -27,7 +27,8 @@ public class AgentHost {
 	
 	private static AgentHost agentHost = null;
 	private Map<String, Agent> agents = null;
-	private AgentConfig config = null;
+	private Config config = null;
+	private Map<String, AgentConfig> configs = null;
 		
 	public static final AgentHost getInstance() {
 		if(agentHost==null) {
@@ -39,6 +40,7 @@ public class AgentHost {
 	
 	private AgentHost() {
 		agents = new HashMap<String, Agent>();
+		configs = new HashMap<String, AgentConfig>();
 	}
 	
 	/**
@@ -65,8 +67,12 @@ public class AgentHost {
 	 *            An Inputstream to the yaml data
 	 */
 	protected Config loadConfig(final InputStream is) {
-		Config config = YamlReader.load(is).expand();
-		this.config = new AgentConfig((ObjectNode) config.get("templates").get("defaultAgent"));
+		config = YamlReader.load(is).expand();
+		Iterator<String> it = config.get("templates").fieldNames();
+		while(it.hasNext()) {
+			String key = it.next();
+			this.configs.put(key, new AgentConfig((ObjectNode) config.get("templates").get(key)));
+		}
 		return config;
 	}
 	
@@ -77,7 +83,8 @@ public class AgentHost {
 	 *            the config file name
 	 */
 	public void loadAgents(String configFileName) {
-		loadAgents(loadConfig(configFileName));
+		loadConfig(configFileName);
+		loadAgents();
 	}
 	
 	/**
@@ -88,18 +95,8 @@ public class AgentHost {
 	 *            the config file name
 	 */
 	public void loadAgents(final InputStream is) {
-		loadAgents(loadConfig(is), null, null);
-	}
-	
-	/**
-	 * Load agents from config file, agent classes should be in the classpath.
-	 * This variant can load WakeableAgents.
-	 * 
-	 * @param configFileName
-	 *            the config file name
-	 */
-	public void loadAgents(Config config) {
-		loadAgents(config, null, null);
+		loadConfig(is);
+		loadAgents();
 	}
 	
 	/**
@@ -112,10 +109,11 @@ public class AgentHost {
 	 * @param cl
 	 *            the custom classloader
 	 */
-	public void loadAgents(Config config, WakeService ws, ClassLoader cl) {
+	public void loadAgents() {
 		
+		AgentConfig dac = this.configs.get("defaultAgent");
 		// Assumption??
-		FileStateConfig stateConfig = new FileStateConfig(this.config.getState());
+		FileStateConfig stateConfig = new FileStateConfig(dac.getState());
 		File folder = new File(stateConfig.getPath());
 		if(folder.listFiles()!=null) {
 			for (final File fileEntry : folder.listFiles()) {
@@ -126,8 +124,7 @@ public class AgentHost {
 		        	ObjectNode ac = state.get("config", ObjectNode.class);
 		        	if(ac!=null) {
 			        	AgentConfig agentConfig = new AgentConfig(ac);
-						Agent newAgent = (Agent) new AgentBuilder().withWakeService(ws)
-								.withClassLoader(cl).with(agentConfig).build();
+						Agent newAgent = (Agent) new AgentBuilder().with(agentConfig).build();
 						newAgent.storeConfig();
 						LOG.info("Created agent:" + newAgent.getId());
 						this.agents.put(newAgent.getId(), newAgent);
@@ -138,14 +135,15 @@ public class AgentHost {
 		
 		
 		final ArrayNode agents = (ArrayNode) config.get("agents");
-		for (final JsonNode agent : agents) {
-			if(!this.agents.containsKey(agent.get("id").asText())) {
-				AgentConfig agentConfig = new AgentConfig((ObjectNode) agent);
-				Agent newAgent = (Agent) new AgentBuilder().withWakeService(ws)
-						.withClassLoader(cl).with(agentConfig).build();
-				newAgent.storeConfig();
-				LOG.info("Created agent:" + newAgent.getId());
-				this.agents.put(newAgent.getId(), newAgent);
+		if(agents!=null) {
+			for (final JsonNode agent : agents) {
+				if(!this.agents.containsKey(agent.get("id").asText())) {
+					AgentConfig agentConfig = new AgentConfig((ObjectNode) agent);
+					Agent newAgent = (Agent) new AgentBuilder().with(agentConfig).build();
+					newAgent.storeConfig();
+					LOG.info("Created agent:" + newAgent.getId());
+					this.agents.put(newAgent.getId(), newAgent);
+				}
 			}
 		}
 	}
@@ -154,19 +152,23 @@ public class AgentHost {
 		this.agents.clear();
 	}
 	
-	@SuppressWarnings("unchecked")
-	public <T extends Agent> T createAgent(String agentClassName, String agentId) throws ClassNotFoundException {
-		return (T) createAgent((Class<T>) Class.forName(agentClassName), agentId);
+	public <T extends Agent> T createAgent(Class<T> agentClass, String agentId) {
+		return createAgent(agentClass, agentId, AgentTemplate.DEFAULT);
 	}
 	
 	@SuppressWarnings("unchecked")
-	public <T extends Agent> T createAgent(Class<T> agentClass, String agentId) {
+	public <T extends Agent> T createAgent(Class<T> agentClass, String agentId, AgentTemplate template) {
 		if(!this.agents.containsKey(agentId)) {
-			AgentConfig agentConfig = this.config;
-			config.setClassName(agentClass.getName());
-			config.setId(agentId);
+			
+			AgentConfig agentConfig = this.configs.get(template.getName());
+			agentConfig.setClassName(agentClass.getName());
+			agentConfig.setId(agentId);
+			
 			Agent newAgent = (Agent) new AgentBuilder().with(agentConfig).build();
 			newAgent.storeConfig();
+			
+			this.agents.put(newAgent.getId(), newAgent);
+			
 			return (T) newAgent;
 		}
 		
@@ -177,6 +179,8 @@ public class AgentHost {
 	public void deleteAgent(String id) {
 		Agent agent = getAgent(id);
 		if(agent!=null) {
+			
+			agent.getScheduler().clear();
 			agent.getState().delete();
 			this.agents.remove(id);
 		}

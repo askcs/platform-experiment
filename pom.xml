@@ -8,8 +8,10 @@
 	<packaging>war</packaging>
 	
 	<properties>
+		<skipTests>true</skipTests>
 		<eve.version>3.0.0</eve.version>
 		<jetty.version>9.2.3.v20140905</jetty.version>
+		<junit.version>4.11</junit.version>
 		<skipTests>true</skipTests> 
 	</properties>
 
@@ -23,6 +25,12 @@
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-maven-plugin</artifactId>
 			<version>${jetty.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 	

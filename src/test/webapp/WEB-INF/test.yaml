@@ -2,7 +2,7 @@ templates:
    defaultAgent:
       state:
          class: com.almende.eve.state.file.FileStateBuilder
-         path: .eveagents
+         path: .testeveagents
          json: true
       scheduler:
          class: com.almende.eve.scheduling.PersistentSchedulerBuilder
@@ -18,9 +18,4 @@ templates:
       transport:
          class: com.almende.eve.transport.xmpp.XmppTransportBuilder
          address: xmpp://user@xmpp.ask-cs.com/ask
-      extends: templates/defaultAgent          
-         
-agents:
--  id: queen
-   class: com.askcs.platform.agents.DomainAgent
-   extends: templates/defaultAgent
+      extends: templates/defaultAgent
