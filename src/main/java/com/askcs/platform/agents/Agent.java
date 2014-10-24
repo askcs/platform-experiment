@@ -4,18 +4,12 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Set;
 
+import com.askcs.platform.agent.intf.AgentInterface;
 import com.askcs.platform.listener.AgentHost;
 import com.askcs.platform.listener.AgentTemplate;
 
-public class Agent extends com.almende.eve.agent.Agent {
-
-	public void storeConfig() {
-		getState().put("config", getConfig());
-	}
+public class Agent extends com.almende.eve.agent.Agent implements AgentInterface {
 	
-	public Agent getAgent(String agentId) {
-		return getAgentHost().getAgent(agentId);
-	}
 	
 	public <T extends Agent> T createAgent(Class<T> agentClass, String agentId) {
 		return createAgent(agentClass, agentId, AgentTemplate.DEFAULT);
@@ -25,8 +19,8 @@ public class Agent extends com.almende.eve.agent.Agent {
 		return getAgentHost().createAgent(agentClass, agentId, template);
 	}
 	
-	public void deleteAgent(String agentId) {
-		getAgentHost().deleteAgent(agentId);
+	public Agent getAgent(String agentId) {
+		return getAgentHost().getAgent(agentId);
 	}
 	
 	protected AgentHost getAgentHost() {
@@ -62,5 +56,13 @@ public class Agent extends com.almende.eve.agent.Agent {
 	
 	protected URI getAgentUrl(String id) {
 		return URI.create("local:"+id);
+	}
+	
+	protected <T> T getAgent(String id, Class<T> agentInterface) {
+		return createAgentProxy(getAgentUrl(id), agentInterface);
+	}
+	
+	public void purge() {
+		destroy();
 	}
 }

@@ -3,6 +3,6 @@
 .project
 .classpath
 
-.eveagents/
-.testeveagents/
+*eveagents*/
 target/
+/target/

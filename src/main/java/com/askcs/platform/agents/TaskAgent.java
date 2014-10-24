@@ -32,6 +32,6 @@ public class TaskAgent extends Agent implements TaskAgentIntf {
 	}
 	
 	public void purge() {
-		deleteAgent(getId());
+		destroy();
 	}
 }

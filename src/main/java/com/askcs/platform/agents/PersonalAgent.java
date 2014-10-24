@@ -169,6 +169,6 @@ public class PersonalAgent extends Agent implements PersonalAgentIntf {
 	public void purge() {
 		removeAllTasks();
 		
-		deleteAgent(getId());
+		destroy();
 	}
 }

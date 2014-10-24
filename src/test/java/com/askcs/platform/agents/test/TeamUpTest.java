@@ -1,5 +1,8 @@
 package com.askcs.platform.agents.test;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Set;
 
@@ -9,6 +12,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.almende.eve.config.YamlReader;
 import com.almende.util.uuid.UUID;
 import com.askcs.platform.agents.ClientGroupAgent;
 import com.askcs.platform.agents.DomainAgent;
@@ -32,7 +36,8 @@ public class TeamUpTest {
 		String path = "src/test/webapp/WEB-INF/test.yaml";
 		if (path != null && !path.isEmpty()) {
 			ah = AgentHost.getInstance();
-			ah.loadAgents(path);
+			InputStream is = new FileInputStream(new File(path)); 
+			ah.loadConfig(YamlReader.load(is).expand());
 		}
 		
 		 da = ah.createAgent(DomainAgent.class, DOMAIN_AGENT_ID);
@@ -42,6 +47,7 @@ public class TeamUpTest {
 	public void tearDown() throws Exception {
 		
 		da.purge();
+		ah.clear();
 	}
 
 	@Test
@@ -52,8 +58,8 @@ public class TeamUpTest {
 		final int NR_TEAMS = 1;
 		final int NR_TEAM_MEMBERS = 1;
 		final int NR_CLIENT_GROUPS = 1;
-		final int NR_CLIENTS = 10;
-		final int NR_TASKS = 10;
+		final int NR_CLIENTS = 100;
+		final int NR_TASKS = 100;
 		
 		HashMap<String, String> teamIds = new HashMap<String, String>();
 		HashMap<String, String> cgIds = new HashMap<String, String>();
@@ -62,7 +68,6 @@ public class TeamUpTest {
 		for (int t=0; t<NR_TEAMS; t++) {
 			
 			teamIds.put("team_"+t, da.createTeamAgent("team_"+t));
-			
 			TeamAgent ta = (TeamAgent) ah.getAgent(teamIds.get("team_"+t));
 			
 			// Create team members

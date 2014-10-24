@@ -9,7 +9,7 @@
 	
 	<properties>
 		<skipTests>true</skipTests>
-		<eve.version>3.0.0</eve.version>
+		<eve.version>3.1.0-SNAPSHOT</eve.version>
 		<jetty.version>9.2.3.v20140905</jetty.version>
 		<junit.version>4.11</junit.version>
 		<skipTests>true</skipTests> 

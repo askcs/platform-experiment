@@ -5,7 +5,7 @@ import java.util.Set;
 import com.almende.eve.transform.rpc.annotation.Name;
 import com.askcs.platform.entity.Group;
 
-public interface GroupAgentIntf  {
+public interface GroupAgentIntf {
 
 	/**/
     // location/domain specific calls

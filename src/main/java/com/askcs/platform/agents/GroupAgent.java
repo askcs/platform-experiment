@@ -228,6 +228,6 @@ public class GroupAgent extends Agent implements GroupAgentIntf {
 	}
 
 	public void purge() {
-		getAgentHost().deleteAgent(getId());
+		destroy();
 	}
 }

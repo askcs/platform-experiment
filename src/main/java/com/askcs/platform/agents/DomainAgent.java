@@ -10,10 +10,13 @@ import java.util.logging.Logger;
 import com.almende.eve.transform.rpc.annotation.Access;
 import com.almende.eve.transform.rpc.annotation.AccessType;
 import com.almende.eve.transform.rpc.annotation.Name;
+import com.almende.eve.transform.rpc.annotation.Namespace;
 import com.almende.util.TypeUtil;
 import com.almende.util.uuid.UUID;
+import com.askcs.platform.agent.intf.ClientGroupAgentIntf;
 import com.askcs.platform.agent.intf.GroupAgentIntf;
 import com.askcs.platform.agent.intf.PersonalAgentIntf;
+import com.askcs.platform.agent.intf.TeamAgentIntf;
 import com.askcs.platform.entity.Client;
 import com.askcs.platform.entity.Group;
 import com.askcs.platform.entity.Team;
@@ -32,6 +35,15 @@ public class DomainAgent extends Agent {
 	private static final String TEAM_AGENT_GROUP_NAME = "teams";
 	private static final String CLIENT_GROUP_AGENT_GROUP_NAME = "clientGroups";
 	
+	private GroupAgentIntf groupAgent = null;
+	
+	@Override
+	public void onBoot() {
+		super.onBoot();
+		
+		log.info("I: "+getId()+" got booted");
+	}
+	
 	// Personal Agent section
 	
 	public String createClientAgent(@Name("client") Client client) {
@@ -41,10 +53,9 @@ public class DomainAgent extends Agent {
 			agentId = (new UUID()).toString();
 		}
 		
-		String id = createPersonalAgent(agentId);
+		PersonalAgent agent = createPersonalAgent(agentId);
 		// Failed to create agent because agentId already exists
-		if(id==null) {
-			PersonalAgent agent = (PersonalAgent) getAgent(id);
+		if(agent!=null) {
 			agent.setClient(client);
 			agent.setAgentType(PersonalAgent.CLIENT_AGENT_TYPE);
 			
@@ -55,7 +66,7 @@ public class DomainAgent extends Agent {
 			}
 		}
 		
-		return id;		
+		return agent.getId();		
 	}
 	
 	public String createTeamMemberAgent(@Name("user") User user) {
@@ -65,10 +76,9 @@ public class DomainAgent extends Agent {
 			return null;
 		}
 		
-		String id = createPersonalAgent(agentId);
+		PersonalAgent agent = createPersonalAgent(agentId);
 		// Failed to create agent because agentId already exists
-		if(id!=null) {
-			PersonalAgent agent = (PersonalAgent) getAgent(id);
+		if(agent!=null) {
 			agent.setUser(user);
 			agent.setAgentType(PersonalAgent.TEAM_MEMBER_AGENT_TYPE);
 			
@@ -79,12 +89,12 @@ public class DomainAgent extends Agent {
 			}
 		}
 		
-		return id;
+		return agent.getId();
 	}
 
-	public String createPersonalAgent(@Name("agentId") String agentId) {
+	protected PersonalAgent createPersonalAgent(@Name("agentId") String agentId) {
 		
-		if(!hasMember(getGroupId(PERSONAL_AGENT_GROUP_NAME), agentId)) {
+		if(!getGroupAgent().hasMember(getGroupId(PERSONAL_AGENT_GROUP_NAME), agentId)) {
 			PersonalAgent agent = createAgent(PersonalAgent.class, agentId);
 			agent.setDomainAgentId(getId());
 			try {
@@ -93,7 +103,7 @@ public class DomainAgent extends Agent {
 				log.warning("Failed to add personal agent to group");
 			}
 			
-			return agent.getId();
+			return agent;
 		}
 		return null;
 	}
@@ -109,7 +119,7 @@ public class DomainAgent extends Agent {
 	public Set<String> getPersonalAgentIds() {
 		Set<String> personalAgentIds = new HashSet<String>();
 		try {
-			Group group = getGroup(getGroupId(PERSONAL_AGENT_GROUP_NAME));
+			Group group = getGroupAgent().getGroup(getGroupId(PERSONAL_AGENT_GROUP_NAME));
 			personalAgentIds = group.getMembers();
 		} catch (Exception e) {
 			log.warning("Failed to load personal agents");
@@ -150,18 +160,18 @@ public class DomainAgent extends Agent {
 	}
 	
 	public void deleteTeamAgent(@Name("id") String id) {
-		if(hasMember(getGroupId(TEAM_AGENT_GROUP_NAME), id)) {
+		if(getGroupAgent().hasMember(getGroupId(TEAM_AGENT_GROUP_NAME), id)) {
 			
 			// TODO: Remove references
-			
-			deleteAgent(id);
+			TeamAgentIntf ta = getAgent(id, TeamAgentIntf.class);
+			ta.purge();
 		}
 	}
 	
 	public Set<String> getTeamIds() {
 		Set<String> teamIds = new HashSet<String>();
 		try {
-			Group group = getGroup(getGroupId(TEAM_AGENT_GROUP_NAME));
+			Group group = getGroupAgent().getGroup(getGroupId(TEAM_AGENT_GROUP_NAME));
 			teamIds = group.getMembers();
 		} catch (Exception e) {
 			log.warning("Failed to load teams");
@@ -198,18 +208,18 @@ public class DomainAgent extends Agent {
 	
 	
 	public void deleteClientGroupAgent(@Name("id") String id) {
-		if(hasMember(getGroupId(CLIENT_GROUP_AGENT_GROUP_NAME), id)) {
+		if(getGroupAgent().hasMember(getGroupId(CLIENT_GROUP_AGENT_GROUP_NAME), id)) {
 			
 			// TODO: Remove references
-			
-			deleteAgent(id);
+			ClientGroupAgentIntf cga = getAgent(id, ClientGroupAgentIntf.class);
+			cga.purge();
 		}
 	}
 	
 	public Set<String> getClientGroupIds() {
 		Set<String> cgIds = new HashSet<String>();
 		try {
-			Group group = getGroup(getGroupId(CLIENT_GROUP_AGENT_GROUP_NAME));
+			Group group = getGroupAgent().getGroup(getGroupId(CLIENT_GROUP_AGENT_GROUP_NAME));
 			cgIds = group.getMembers();
 		} catch (Exception e) {
 			log.warning("Failed to load client groups");
@@ -230,7 +240,7 @@ public class DomainAgent extends Agent {
 	// Group section
 	
 	public void addMemberToGroup(@Name("groupName") String groupName, @Name("agentId") String agentId) throws Exception {
-		addMember(getGroupId(groupName), agentId);
+		getGroupAgent().addMember(getGroupId(groupName), agentId);
 	}
 	
 	public String getGroupId(@Name("groupName") String groupName) {
@@ -246,7 +256,7 @@ public class DomainAgent extends Agent {
 		} 
 		// if the id doesn't exist the group doesn't exist so create it
 		else {
-			Group group = createGroup(groupName);
+			Group group = getGroupAgent().createGroup(groupName);
 			groupMapId.put(groupName, group.getId());
 			setGroupIdMap(groupMapId);
 			
@@ -279,11 +289,16 @@ public class DomainAgent extends Agent {
 		return groupAgentId;
 	}
 	
+	@Namespace("group")
 	public GroupAgentIntf getGroupAgent() {
-		return createAgentProxy(URI.create("local:"+getGroupAgentId()), GroupAgentIntf.class);
+		if(groupAgent==null) {
+			groupAgent = createAgentProxy(URI.create("local:"+getGroupAgentId()), GroupAgentIntf.class);
+		}
+		
+		return groupAgent;
 	}
 	
-	public Set<Group> getGroups() {
+	/*public Set<Group> getGroups() {
 		return getGroupAgent().getGroups();
 	}
 	
@@ -312,7 +327,7 @@ public class DomainAgent extends Agent {
 	public void removeMember(@Name("groupId") String groupId,
 			@Name("agentId") String agentId) throws Exception {
 		getGroupAgent().removeMember(groupId, agentId);
-	}
+	}*/
 	
 	// End Group Agent section
 	
@@ -330,6 +345,6 @@ public class DomainAgent extends Agent {
 		// Delete group agent
 		getGroupAgent().purge();
 		
-		getAgentHost().deleteAgent(getId());
+		destroy();
 	}
 }
