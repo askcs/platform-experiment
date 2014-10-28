@@ -87,8 +87,11 @@ public class PersonalAgent extends Agent implements PersonalAgentIntf {
 	protected void removeAllTasks() {
 		Set<String> taskIds = getTaskIds();
 		for(String taskId : taskIds) {
-			removeTask(taskId);
+			TaskAgentIntf ta = getTaskAgent(taskId);
+			ta.purge();
 		}
+		taskIds.clear();
+		setTaskIds(taskIds);
 	}
 	
 	public Set<String> getTaskIds() {
