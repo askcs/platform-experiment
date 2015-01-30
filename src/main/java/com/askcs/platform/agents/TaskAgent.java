@@ -2,9 +2,9 @@ package com.askcs.platform.agents;
 
 import java.util.logging.Logger;
 
-import com.almende.eve.transform.rpc.annotation.Access;
-import com.almende.eve.transform.rpc.annotation.AccessType;
-import com.almende.eve.transform.rpc.annotation.Name;
+import com.almende.eve.protocol.jsonrpc.annotation.Access;
+import com.almende.eve.protocol.jsonrpc.annotation.AccessType;
+import com.almende.eve.protocol.jsonrpc.annotation.Name;
 import com.almende.util.TypeUtil;
 import com.askcs.platform.agent.intf.TaskAgentIntf;
 import com.askcs.platform.entity.Task;

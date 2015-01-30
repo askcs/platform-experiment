@@ -2,9 +2,12 @@ package com.askcs.platform.agent.intf;
 
 import java.util.Set;
 
-import com.almende.eve.transform.rpc.annotation.Name;
+import com.almende.eve.protocol.jsonrpc.annotation.Access;
+import com.almende.eve.protocol.jsonrpc.annotation.AccessType;
+import com.almende.eve.protocol.jsonrpc.annotation.Name;
 import com.askcs.platform.entity.Group;
 
+@Access(AccessType.PUBLIC)
 public interface GroupAgentIntf {
 
 	/**/

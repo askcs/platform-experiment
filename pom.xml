@@ -24,6 +24,11 @@
 			<version>${eve.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>com.almende.eve</groupId>
+			<artifactId>eve-state-mongo</artifactId>
+			<version>${eve.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-maven-plugin</artifactId>
 			<version>${jetty.version}</version>

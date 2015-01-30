@@ -45,8 +45,11 @@ public class TeamUpTest {
 
 	@After
 	public void tearDown() throws Exception {
+		
+		long start = System.currentTimeMillis();
 		da.purge();
 		ah.clear();
+		System.out.println("Removing domain took: " + (System.currentTimeMillis() - start));
 	}
 
 	@Test
@@ -58,8 +61,8 @@ public class TeamUpTest {
 		final int NR_TEAMS = 1;
 		final int NR_TEAM_MEMBERS = 1;
 		final int NR_CLIENT_GROUPS = 1;
-		final int NR_CLIENTS = 100;
-		final int NR_TASKS = 100;
+		final int NR_CLIENTS = 10;
+		final int NR_TASKS = 10;
 
 		HashMap<String, String> teamIds = new HashMap<String, String>();
 		HashMap<String, String> cgIds = new HashMap<String, String>();
@@ -85,15 +88,13 @@ public class TeamUpTest {
 			cgIds.put("cg_" + i, da.createClientGroupAgent("cg_" + i));
 
 			// Link a team to a client Group
-			ClientGroupAgent cga = (ClientGroupAgent) ah.getAgent(cgIds
-					.get("cg_" + i));
+			ClientGroupAgent cga = (ClientGroupAgent) ah.getAgent(cgIds.get("cg_" + i));
 			cga.addTeam(teamIds.get("team_" + i));
 
 			// Create clients
 			for (int j = 0; j < NR_CLIENTS; j++) {
 
-				Client client = new Client("client_" + i + "_" + j, "Client", j
-						+ "");
+				Client client = new Client("client_" + i + "_" + j, "Client", j + "");
 				String id = da.createClientAgent(client);
 				cga.addClient(id);
 
@@ -106,21 +107,18 @@ public class TeamUpTest {
 					ca.addTask(task);
 				}
 			}
-			System.out.println("Creating tasks took: "
-					+ (System.currentTimeMillis() - start));
+			System.out.println("Creating tasks took: " + (System.currentTimeMillis() - start));
 
 			start = System.currentTimeMillis();
 			Set<Task> tasks = cga.getTasks(false);
-			System.out.println("Loading tasks took: "
-					+ (System.currentTimeMillis() - start));
+			System.out.println("Loading tasks took: " + (System.currentTimeMillis() - start));
 			Assert.assertEquals(NR_CLIENTS * NR_TASKS, tasks.size());
 
 			tasks.clear();
 
 			start = System.currentTimeMillis();
 			tasks = cga.getTasks(true);
-			System.out.println("Loading tasks in parallel took: "
-					+ (System.currentTimeMillis() - start));
+			System.out.println("Loading tasks in parallel took: " + (System.currentTimeMillis() - start));
 			Assert.assertEquals(NR_CLIENTS * NR_TASKS, tasks.size());
 		}
 		Assert.assertEquals(NR_TEAMS, da.getTeamIds().size());

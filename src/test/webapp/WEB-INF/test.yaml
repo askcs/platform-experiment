@@ -7,16 +7,21 @@ templates:
          class: com.almende.eve.transport.http.HttpTransportBuilder
          servletUrl: http://localhost:8080/agents/
          doAuthentication: false
+      scheduler:
+         class: com.almende.eve.scheduling.PersistentSchedulerBuilder
+         state:
+            class: com.almende.eve.state.file.FileStateBuilder
+            path: .testeveschedular
    defaultAgent:
       instantiationService:
          state:
             class: com.almende.eve.state.file.FileStateBuilder
-            path: .testeveagentsinit
+            path: .testeveagents
             id: InitService
       extends: templates/baseAgent
       
 instantiationServices:
 - state:
     class: com.almende.eve.state.file.FileStateBuilder
-    path: .testeveagentsinit
+    path: .testeveagents
     id: InitService

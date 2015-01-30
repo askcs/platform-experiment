@@ -9,6 +9,9 @@
       <param-value>eve.yaml</param-value>
    </context-param>
 
+	<listener>
+      <listener-class>com.askcs.platform.listener.PreInstantiationListener</listener-class>
+   </listener>
    <listener>
       <listener-class>com.askcs.platform.listener.PlatformListener</listener-class>
    </listener>

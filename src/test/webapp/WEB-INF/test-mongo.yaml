@@ -1,0 +1,29 @@
+templates:
+   baseAgent:
+      state:
+         class: com.almende.eve.state.mongo.MongoStateBuilder
+         host: localhost
+         port: 27017
+         db: eve
+         collection: agents
+      transport:
+         class: com.almende.eve.transport.http.HttpTransportBuilder
+         servletUrl: http://localhost:8080/agents/
+         doAuthentication: false
+   defaultAgent:
+      instantiationService:
+         state:
+            class: com.almende.eve.state.mongo.MongoStateBuilder
+            host: localhost
+            port: 27017
+            db: eve
+            collection: agents-init
+      extends: templates/baseAgent
+      
+instantiationServices:
+- state:
+    class: com.almende.eve.state.mongo.MongoStateBuilder
+    host: localhost
+    port: 27017
+    db: eve
+    collection: agents-init

@@ -1,5 +1,10 @@
 templates:
    baseAgent:
+      transport:
+         class: com.almende.eve.transport.http.HttpTransportBuilder
+         servletUrl: http://localhost:8080/agents/
+         doAuthentication: false
+   defaultAgent:
       state:
          class: com.almende.eve.state.file.FileStateBuilder
          path: .eveagents
@@ -7,13 +12,8 @@ templates:
          class: com.almende.eve.scheduling.PersistentSchedulerBuilder
          state:
             class: com.almende.eve.state.file.FileStateBuilder
-            path: .eveagents
+            path: .eveschedular
             id: agentSchedular
-      transport:
-         class: com.almende.eve.transport.http.HttpTransportBuilder
-         servletUrl: http://localhost:8080/agents/
-         doAuthentication: false
-   defaultAgent:
       instantiationService:
          state:
             class: com.almende.eve.state.file.FileStateBuilder
@@ -22,8 +22,8 @@ templates:
       extends: templates/baseAgent
          
 agents:
--  id: domain
-   class: com.askcs.platform.agents.DomainAgent
+-  id: ask_mgmt
+   class: com.askcs.platform.agents.ManagementAgent
    extends: templates/baseAgent
    
 instantiationServices:

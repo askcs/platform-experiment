@@ -7,10 +7,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import com.almende.eve.transform.rpc.annotation.Access;
-import com.almende.eve.transform.rpc.annotation.AccessType;
-import com.almende.eve.transform.rpc.annotation.Name;
-import com.almende.eve.transform.rpc.annotation.Namespace;
+import com.almende.eve.protocol.jsonrpc.annotation.Access;
+import com.almende.eve.protocol.jsonrpc.annotation.AccessType;
+import com.almende.eve.protocol.jsonrpc.annotation.Name;
+import com.almende.eve.protocol.jsonrpc.annotation.Namespace;
 import com.almende.util.TypeUtil;
 import com.almende.util.uuid.UUID;
 import com.askcs.platform.agent.intf.ClientGroupAgentIntf;

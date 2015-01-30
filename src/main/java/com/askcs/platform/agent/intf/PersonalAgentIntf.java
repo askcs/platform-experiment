@@ -2,7 +2,7 @@ package com.askcs.platform.agent.intf;
 
 import java.util.Set;
 
-import com.almende.eve.transform.rpc.annotation.Name;
+import com.almende.eve.protocol.jsonrpc.annotation.Name;
 import com.askcs.platform.entity.Task;
 import com.askcs.platform.entity.User;
 
