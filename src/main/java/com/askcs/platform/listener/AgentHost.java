@@ -108,7 +108,12 @@ public class AgentHost {
 	}
 	
 	public AgentConfig getAgentConfig(AgentTemplate template) {
-	    ObjectNode config = JOM.getInstance().convertValue( this.templates.get(template.getName()), ObjectNode.class );
+	    ObjectNode config = null;
+	    try {
+	        config = JOM.getInstance().readValue( this.templates.get(template.getName()).toString(), ObjectNode.class );
+	    } catch (Exception e) {
+	        LOG.info( "Failed to load template" );
+	    }
 	    return new AgentConfig(config);
 	}
 	
