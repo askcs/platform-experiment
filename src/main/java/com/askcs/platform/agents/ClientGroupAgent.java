@@ -66,7 +66,7 @@ public class ClientGroupAgent extends Agent implements AgentInterface {
 		getState().put("teamIds", teamIds);
 	}
 	
-	public Set<Team> getTeams(boolean parallel) {
+	public Set<Team> getTeams(@Name("parallel") boolean parallel) {
 		
 		final Set<Team> teams = new HashSet<Team>();
 		Set<String> teamIds = getTeamIds();
@@ -148,7 +148,7 @@ public class ClientGroupAgent extends Agent implements AgentInterface {
 		return createAgentProxy(getAgentUrl(id), PersonalAgentIntf.class);
 	}
 	
-	public Set<Task> getTasks(boolean parallel) {
+	public Set<Task> getTasks(@Name("parallel") boolean parallel) {
 		
 		Set<String> clientIds = getClientIds();
 		

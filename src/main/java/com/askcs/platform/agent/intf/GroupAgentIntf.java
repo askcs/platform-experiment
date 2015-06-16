@@ -46,5 +46,5 @@ public interface GroupAgentIntf {
     public Set<String> getGroupMembers_JOIN (@Name("groupIds") java.util.List<String> groupIds) throws Exception;
 
     // agent methods
-    public void purge();
+    //public void purge();
 }

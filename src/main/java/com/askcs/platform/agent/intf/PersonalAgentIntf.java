@@ -6,7 +6,7 @@ import com.almende.eve.protocol.jsonrpc.annotation.Name;
 import com.askcs.platform.entity.Task;
 import com.askcs.platform.entity.User;
 
-public interface PersonalAgentIntf {
+public interface PersonalAgentIntf extends AgentInterface {
 
 	public void setUser(@Name("user") User user);
 	public User getUser();
@@ -15,5 +15,7 @@ public interface PersonalAgentIntf {
 	
 	public Set<Task> getTasks(@Name("parallel") boolean parallel);
 	
-	public void purge();
+	public void addTask(@Name("task") Task task);
+	
+	//public void purge();
 }

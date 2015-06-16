@@ -1,5 +1,6 @@
 package com.askcs.platform.agents;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -7,11 +8,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import org.apache.commons.codec.digest.DigestUtils;
+
+import com.almende.eve.algorithms.clustering.GlobalAddressMapper;
 import com.almende.eve.protocol.jsonrpc.annotation.Access;
 import com.almende.eve.protocol.jsonrpc.annotation.AccessType;
 import com.almende.eve.protocol.jsonrpc.annotation.Name;
 import com.almende.eve.protocol.jsonrpc.annotation.Namespace;
 import com.almende.util.TypeUtil;
+import com.almende.util.callback.AsyncCallback;
+import com.almende.util.jackson.JOM;
 import com.almende.util.uuid.UUID;
 import com.askcs.platform.agent.intf.ClientGroupAgentIntf;
 import com.askcs.platform.agent.intf.GroupAgentIntf;
@@ -19,8 +25,10 @@ import com.askcs.platform.agent.intf.PersonalAgentIntf;
 import com.askcs.platform.agent.intf.TeamAgentIntf;
 import com.askcs.platform.entity.Client;
 import com.askcs.platform.entity.Group;
+import com.askcs.platform.entity.Task;
 import com.askcs.platform.entity.Team;
 import com.askcs.platform.entity.User;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @Access(AccessType.PUBLIC)
 public class DomainAgent extends Agent {
@@ -38,10 +46,63 @@ public class DomainAgent extends Agent {
 	private GroupAgentIntf groupAgent = null;
 	
 	@Override
-	public void onBoot() {
-		super.onBoot();
-		
-		log.info("I: "+getId()+" got booted");
+	protected void onReady() {
+	    getGroupAgent();
+	}
+	
+	public void initTeamupEnvironment(@Name("count") int count) {
+	    
+            final int NR_TEAM_MEMBERS = 1;
+            final int NR_CLIENTS = 10;
+            final int NR_TASKS = 10;
+
+            // Create x teams
+            int index = getTeamIds().size();
+            for(int i = index; i < index + count; i++) {
+                addInitTeam( index, NR_CLIENTS, NR_TEAM_MEMBERS, NR_TASKS );
+            }
+	}
+	
+	protected void addInitTeam(int index, int clients, int employees, int nrOftasks) {
+	    	    
+	    String teamId = createTeamAgent("team_" + index);
+            TeamAgentIntf ta = getLocalAgent(teamId, TeamAgentIntf.class);
+            
+            // Collect indexes
+            int teamMemberIndex = getTeamMemberIds().size();
+            int clientIndex = getClientIds().size();
+
+            // Create team members
+            for (int u = teamMemberIndex; u < teamMemberIndex + employees; u++) {
+
+                    User user = new User("user_" + index + "_" + u,
+                                    DigestUtils.md5Hex("askask"));
+                    String id = createTeamMemberAgent(user);
+                    ta.addTeamMember(id);
+            }
+            
+            String clientGroupId = createClientGroupAgent("cg_" + index);
+
+            // Link a team to a client Group
+            ClientGroupAgentIntf cga = getLocalAgent(clientGroupId, ClientGroupAgentIntf.class);
+            cga.addTeam(teamId);
+
+            // Create clients
+            for (int j = clientIndex; j < clientIndex + clients; j++) {
+
+                    Client client = new Client("client_" + index + "_" + j, "Client", j + "");
+                    String id = createClientAgent(client);
+                    cga.addClient(id);
+
+                    PersonalAgentIntf ca = getLocalAgent(id, PersonalAgentIntf.class);
+
+                    // Add tasks
+                    for (int t = 0; t < nrOftasks; t++) {
+
+                            Task task = new Task("task_" + index + "_" + j + "_" + t, id);
+                            ca.addTask(task);
+                    }
+            }
 	}
 	
 	// Personal Agent section
@@ -85,7 +146,8 @@ public class DomainAgent extends Agent {
 			try {
 				addMemberToGroup(TEAM_MEMBER_AGENT_GROUP_NAME, agentId);
 			} catch (Exception e) {
-				log.warning("Failed to add team member personal agent to group");
+				log.warning("Failed to add team member personal agent to group, e: ");
+				e.printStackTrace();
 			}
 		}
 		
@@ -100,7 +162,8 @@ public class DomainAgent extends Agent {
 			try {
 				addMemberToGroup(PERSONAL_AGENT_GROUP_NAME, agentId);
 			} catch (Exception e) {
-				log.warning("Failed to add personal agent to group");
+				log.warning("Failed to add personal agent to group, e: ");
+				e.printStackTrace();				
 			}
 			
 			return agent;
@@ -112,8 +175,17 @@ public class DomainAgent extends Agent {
 		
 		// TODO: Remove references
 		
-		PersonalAgentIntf pa = getPersonalAgent(agentId);
-		pa.purge();
+		/*PersonalAgentIntf pa = getPersonalAgent(agentId);
+		pa.purge();*/
+		
+		URI url = getAgentUrl(agentId);
+		try {
+                    call(url, "purge", null);
+                }
+                catch ( IOException e ) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
 	}
 	
 	public Set<String> getPersonalAgentIds() {
@@ -146,14 +218,15 @@ public class DomainAgent extends Agent {
 	public String createTeamAgent(@Name("name") String name) {
 				
 		Team team = new Team(name);
-		TeamAgent agent = createAgent(TeamAgent.class, "teamAgent_" + team.getUuid());
+		TeamAgent agent = createAgent(TeamAgent.class, name);
 		agent.setDomainAgentId(getId());
 		agent.setTeam(team);
 		String agentId = agent.getId();
 		try {
 			addMemberToGroup(TEAM_AGENT_GROUP_NAME, agentId);
 		} catch (Exception e) {
-			log.warning("Failed to add personal agent to group");
+			log.warning("Failed to add team to group, e: ");
+			e.printStackTrace();			
 		}
 		
 		return agent.getId();
@@ -162,22 +235,43 @@ public class DomainAgent extends Agent {
 	public void deleteTeamAgent(@Name("id") String id) {
 		if(getGroupAgent().hasMember(getGroupId(TEAM_AGENT_GROUP_NAME), id)) {
 			
-			// TODO: Remove references
-			TeamAgentIntf ta = getAgent(id, TeamAgentIntf.class);
-			ta.purge();
+			// TODO: Remove references			
+			URI url = getAgentUrl( id );
+                        try {
+                            call(url, "purge", null);
+                        }
+                        catch ( IOException e ) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        }
 		}
 	}
 	
 	public Set<String> getTeamIds() {
-		Set<String> teamIds = new HashSet<String>();
-		try {
-			Group group = getGroupAgent().getGroup(getGroupId(TEAM_AGENT_GROUP_NAME));
-			teamIds = group.getMembers();
-		} catch (Exception e) {
-			log.warning("Failed to load teams");
-		}
-		
-		return teamIds;
+            Set<String> teamIds = new HashSet<String>();
+            try {
+                Group group = getGroupAgent().getGroup( getGroupId( TEAM_AGENT_GROUP_NAME ) );
+                teamIds = group.getMembers();
+            }
+            catch ( Exception e ) {
+                log.warning( "Failed to load teams, e: " );
+                e.printStackTrace();
+            }
+    
+            return teamIds;
+	}
+	
+	public Set<String> getTeamMemberIds() {
+            Set<String> teamMemberIds = new HashSet<String>();
+            try {
+                Group group = getGroupAgent().getGroup( getGroupId( TEAM_MEMBER_AGENT_GROUP_NAME ) );
+                teamMemberIds = group.getMembers();
+            }
+            catch ( Exception e ) {
+                log.warning( "Failed to load teamMembers" );
+            }
+    
+            return teamMemberIds;
 	}
 	
 	protected void deleteTeamAgents() {
@@ -187,20 +281,25 @@ public class DomainAgent extends Agent {
 		}
 	}
 	
-	// End Team agent section	
+	// End Team agent section
+	
+	public URI getMappedAgentUrl(@Name("id")  String id) {
+	    return GlobalAddressMapper.get().get( getAgentUrl(id).toASCIIString() );
+	}
 	
 	// ClientGroup agent section
 	
 	public String createClientGroupAgent(@Name("name") String name) {
 		
-		ClientGroupAgent agent = createAgent(ClientGroupAgent.class, "cgAgent_" + (new UUID()).toString());
+		ClientGroupAgent agent = createAgent(ClientGroupAgent.class, name);
 		String agentId = agent.getId();
 		agent.setDomainAgentId(getId());
 		agent.setName(name);
 		try {
 			addMemberToGroup(CLIENT_GROUP_AGENT_GROUP_NAME, agentId);
 		} catch (Exception e) {
-			log.warning("Failed to add personal agent to group");
+			log.warning("Failed to add personal agent to group, e: ");
+			e.printStackTrace();
 		}
 		
 		return agent.getId();
@@ -211,22 +310,43 @@ public class DomainAgent extends Agent {
 		if(getGroupAgent().hasMember(getGroupId(CLIENT_GROUP_AGENT_GROUP_NAME), id)) {
 			
 			// TODO: Remove references
-			ClientGroupAgentIntf cga = getAgent(id, ClientGroupAgentIntf.class);
-			cga.purge();
+			/*ClientGroupAgentIntf cga = getAgent(id, ClientGroupAgentIntf.class);
+			cga.purge();*/
+		    
+		        URI url = getAgentUrl( id );
+		        try {
+                            call(url, "purge", null);
+                        }
+                        catch ( IOException e ) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        }
 		}
 	}
 	
 	public Set<String> getClientGroupIds() {
-		Set<String> cgIds = new HashSet<String>();
-		try {
-			Group group = getGroupAgent().getGroup(getGroupId(CLIENT_GROUP_AGENT_GROUP_NAME));
-			cgIds = group.getMembers();
-		} catch (Exception e) {
-			log.warning("Failed to load client groups");
-		}
-		
-		return cgIds;
-	}
+                Set<String> cgIds = new HashSet<String>();
+                try {
+                        Group group = getGroupAgent().getGroup(getGroupId(CLIENT_GROUP_AGENT_GROUP_NAME));
+                        cgIds = group.getMembers();
+                } catch (Exception e) {
+                        log.warning("Failed to load client groups");
+                }
+                
+                return cgIds;
+        }
+	
+	public Set<String> getClientIds() {
+                Set<String> clientIds = new HashSet<String>();
+                try {
+                        Group group = getGroupAgent().getGroup(getGroupId(CLIENT_AGENT_GROUP_NAME));
+                        clientIds = group.getMembers();
+                } catch (Exception e) {
+                        log.warning("Failed to load clients");
+                }
+                
+                return clientIds;
+        }
 	
 	protected void deleteClientGroupAgents() {
 		Set<String> ids = getClientGroupIds();
@@ -240,7 +360,8 @@ public class DomainAgent extends Agent {
 	// Group section
 	
 	public void addMemberToGroup(@Name("groupName") String groupName, @Name("agentId") String agentId) throws Exception {
-		getGroupAgent().addMember(getGroupId(groupName), agentId);
+	        String groupId = getGroupId(groupName);
+		getGroupAgent().addMember(groupId, agentId);
 	}
 	
 	public String getGroupId(@Name("groupName") String groupName) {
@@ -292,44 +413,74 @@ public class DomainAgent extends Agent {
 	@Namespace("group")
 	public GroupAgentIntf getGroupAgent() {
 		if(groupAgent==null) {
-			groupAgent = createAgentProxy(URI.create("local:"+getGroupAgentId()), GroupAgentIntf.class);
+			groupAgent = createAgentProxy(getAgentUrl(getGroupAgentId()), GroupAgentIntf.class);
 		}
 		
 		return groupAgent;
 	}
 	
-	/*public Set<Group> getGroups() {
-		return getGroupAgent().getGroups();
+	public void removeGroupAgent() {
+	    try {
+                call(getAgentUrl(getGroupAgentId()), "purge", null);
+            }
+            catch ( IOException e ) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
 	}
-	
-	public Group getGroup(@Name("id") String id) throws Exception {
-		return getGroupAgent().getGroup(id);
-	}
-	
-	public Set<Group> getGroupByName(@Name("name") String name) {
-		return getGroupAgent().getGroupByName(name);
-	}
-	
-	public Group createGroup(@Name("name") String name) {
-		return getGroupAgent().createGroup(name);
-	}
-	
-	public void addMember(@Name("groupId") String groupId,
-			@Name("agentId") String agentId) throws Exception {
-		getGroupAgent().addMember(groupId, agentId);
-	}
-	
-	public boolean hasMember(@Name("groupId") String groupId,
-			@Name("agentId") String agentId) {
-		return getGroupAgent().hasMember(groupId, agentId);
-	}
-
-	public void removeMember(@Name("groupId") String groupId,
-			@Name("agentId") String agentId) throws Exception {
-		getGroupAgent().removeMember(groupId, agentId);
-	}*/
 	
 	// End Group Agent section
+	
+	public Set<Task> getTasks() {
+	    
+	    Set<String> clientGroupIds = getClientGroupIds();
+	    final int[] count = new int[1];
+            count[0] = clientGroupIds.size();
+            final Set<Task> allTasks = new HashSet<Task>();
+            
+            for(String clientGroupId : clientGroupIds) {
+                    try {
+                            ObjectNode params = JOM.createObjectNode();
+                            params.put("parallel", true);
+                            
+                            call(getAgentUrl(clientGroupId), "getTasks", params, new AsyncCallback<Set<Task>>() {
+                                    public void onSuccess(Set<Task> tasks) {
+                                            synchronized (allTasks) {
+                                                    allTasks.addAll(tasks);
+                                            }
+                                            synchronized (count) {
+                                                    count[0]--;
+                                                    if(count[0]==0) {
+                                                            synchronized (allTasks) {
+                                                                    allTasks.notifyAll();
+                                                            }
+                                                    }
+                                            }
+                                    }
+                                    
+                                    public void onFailure(Exception exception) {
+                                            log.warning("Failed to load tasks e: "+exception.getMessage());
+                                            synchronized (count) {
+                                                    count[0]--;
+                                                    if(count[0]==0) {
+                                                        synchronized (allTasks) {
+                                                            allTasks.notifyAll();
+                                                        }
+                                                    }
+                                            }
+                                    }
+                            });
+                    } catch (IOException e) {
+                            log.warning("Failed to load teams e: "+e.getMessage());
+                    }
+            }
+            synchronized (allTasks) {
+                    try {
+                            allTasks.wait();
+                    } catch (InterruptedException e) {}
+            }
+            return allTasks;
+	}
 	
 	public void purge() {
 		
@@ -343,7 +494,8 @@ public class DomainAgent extends Agent {
 		deleteTeamAgents();
 		
 		// Delete group agent
-		getGroupAgent().purge();
+		removeGroupAgent();
+		
 		
 		destroy();
 	}

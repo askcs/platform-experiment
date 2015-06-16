@@ -3,7 +3,8 @@
 .project
 .classpath
 
+*eveinit*/
 *eveagents*/
-*eveschedular/
+*evescheduler/
 target/
 /target/

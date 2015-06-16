@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import com.almende.eve.agent.AgentBuilder;
 import com.almende.eve.agent.AgentConfig;
 import com.almende.eve.instantiation.InstantiationEntry;
 import com.almende.eve.instantiation.InstantiationService;
@@ -50,7 +49,7 @@ public class PreInstantiationService{
         final State state = new StateBuilder().withConfig( (ObjectNode) myParams.get( "state" ) ).build();
         stateService = state.getService();
         myId = state.getId();
-        defaultConfig = new AgentConfig(config.expand());
+        defaultConfig = AgentConfig.decorate(config);
         load();
     }
     
@@ -90,12 +89,13 @@ public class PreInstantiationService{
      */
     protected void load(final String key) {
             final State innerState = new StateBuilder().withConfig(
-                            new StateConfig((ObjectNode) myParams.get("state")).put("id",
+                            StateConfig.decorate((ObjectNode) myParams.get("state")).put("id",
                                             key)).build();
             final InstantiationEntry result = innerState.get("entry", INSTANTIATIONENTRY);
             String className = innerState.get("_type", String.class);
             if(result==null && className!=null) {
-                AgentConfig newConfig = new AgentConfig( key, (ObjectNode) defaultConfig );
+                AgentConfig newConfig = AgentConfig.decorate( (ObjectNode) defaultConfig );
+                newConfig.setId( key );
                 register( key, (ObjectNode) newConfig, className );
             }
     }
@@ -135,7 +135,7 @@ public class PreInstantiationService{
         }
         if ( innerState == null ) {
             innerState = new StateBuilder()
-                .withConfig( new StateConfig( (ObjectNode) myParams.get( "state" ) )
+                .withConfig( StateConfig.decorate( (ObjectNode) myParams.get( "state" ) )
                     .put( "id", key ) ).build();
         }
         if ( innerState != null ) {

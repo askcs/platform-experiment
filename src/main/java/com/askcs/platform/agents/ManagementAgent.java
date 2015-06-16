@@ -10,9 +10,6 @@ public class ManagementAgent extends Agent {
 
 	@Access(AccessType.PUBLIC)
 	public String createDomainAgent(@Name("id") @Optional String id) {
-		if(id != null && getAgentHost().agentExists(id)) {
-			return null;
-		}
 		
 		if(id==null) {
 			id = (new UUID()).toString();

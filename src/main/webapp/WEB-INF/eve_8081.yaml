@@ -3,14 +3,14 @@ templates:
       transports:
          - class: com.almende.eve.transport.http.HttpTransportBuilder
            servletClass: com.almende.eve.transport.http.DebugServlet
-           servletUrl: http://localhost:8080/agents/
+           servletUrl: http://localhost:8081/agents/
            doAuthentication: false
            doShortcut: true
            servletLauncher: JettyLauncher
            jetty: 
-             port: 8080
+             port: 8081
          - class: com.almende.eve.algorithms.clustering.GlobalAddressTransportBuilder
-           realAddressPattern: http://localhost:8080/agents/
+           realAddressPattern: http://localhost:8081/agents/
    defaultAgent:
       state:
          class: com.almende.eve.state.file.FileStateBuilder
@@ -23,7 +23,7 @@ templates:
       instantiationService:
          state:
             class: com.almende.eve.state.file.FileStateBuilder
-            path: .eveinit_8080
+            path: .eveinit_8081
       protocols:
       - class: com.almende.eve.algorithms.clustering.GlobalAddressProtocolBuilder
       extends: templates/baseAgent
@@ -36,5 +36,5 @@ agents:
 instantiationServices:
 - state:
     class: com.almende.eve.state.file.FileStateBuilder
-    path: .eveinit_8080
+    path: .eveinit_8081
     id: InitService
