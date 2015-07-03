@@ -20,7 +20,9 @@ import com.almende.util.callback.AsyncCallback;
 import com.almende.util.jackson.JOM;
 import com.almende.util.uuid.UUID;
 import com.askcs.platform.agent.intf.ClientGroupAgentIntf;
+import com.askcs.platform.agent.intf.DomainAgentIntf;
 import com.askcs.platform.agent.intf.GroupAgentIntf;
+import com.askcs.platform.agent.intf.HostAgentIntf;
 import com.askcs.platform.agent.intf.PersonalAgentIntf;
 import com.askcs.platform.agent.intf.TeamAgentIntf;
 import com.askcs.platform.entity.Client;
@@ -31,7 +33,7 @@ import com.askcs.platform.entity.User;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @Access(AccessType.PUBLIC)
-public class DomainAgent extends Agent {
+public class DomainAgent extends Agent implements DomainAgentIntf {
 	
 	private Logger log = Logger.getLogger(DomainAgent.class.getSimpleName());  
 	
@@ -53,7 +55,7 @@ public class DomainAgent extends Agent {
 	public void initTeamupEnvironment(@Name("count") int count) {
 	    
             final int NR_TEAM_MEMBERS = 1;
-            final int NR_CLIENTS = 10;
+            final int NR_CLIENTS = 1;
             final int NR_TASKS = 10;
 
             // Create x teams
@@ -86,6 +88,9 @@ public class DomainAgent extends Agent {
             // Link a team to a client Group
             ClientGroupAgentIntf cga = getLocalAgent(clientGroupId, ClientGroupAgentIntf.class);
             cga.addTeam(teamId);
+            
+            // And also the other way around
+            ta.addClientGroup( clientGroupId );
 
             // Create clients
             for (int j = clientIndex; j < clientIndex + clients; j++) {
@@ -105,6 +110,26 @@ public class DomainAgent extends Agent {
             }
 	}
 	
+	public void addTasksPerTeam(@Name("nrOfTasks") int nrOfTasks) {
+	    Set<String> clientIds = getClientIds();
+	    
+	    for(String clientId : clientIds) {
+	        PersonalAgentIntf ca = getAgent(clientId, PersonalAgentIntf.class);
+	        Set<String> taskIds = ca.getTaskIds();
+	        
+	        int index = taskIds.size();
+	        String[] split = taskIds.iterator().next().split("_");
+	        int groupIndex = Integer.parseInt( split[1] );
+	        int clientIndex = Integer.parseInt( split[2] );
+	        
+	        for (int t = index; t < index + nrOfTasks; t++) {
+
+                    Task task = new Task("task_" + groupIndex + "_" + clientIndex + "_" + t, clientId);
+                    ca.addTask(task);
+                }
+	    }
+	}
+	
 	// Personal Agent section
 	
 	public String createClientAgent(@Name("client") Client client) {
@@ -114,7 +139,7 @@ public class DomainAgent extends Agent {
 			agentId = (new UUID()).toString();
 		}
 		
-		PersonalAgent agent = createPersonalAgent(agentId);
+		PersonalAgentIntf agent = createPersonalAgent(agentId);
 		// Failed to create agent because agentId already exists
 		if(agent!=null) {
 			agent.setClient(client);
@@ -137,7 +162,7 @@ public class DomainAgent extends Agent {
 			return null;
 		}
 		
-		PersonalAgent agent = createPersonalAgent(agentId);
+		PersonalAgentIntf agent = createPersonalAgent(agentId);
 		// Failed to create agent because agentId already exists
 		if(agent!=null) {
 			agent.setUser(user);
@@ -154,10 +179,10 @@ public class DomainAgent extends Agent {
 		return agent.getId();
 	}
 
-	protected PersonalAgent createPersonalAgent(@Name("agentId") String agentId) {
+	protected PersonalAgentIntf createPersonalAgent(@Name("agentId") String agentId) {
 		
 		if(!getGroupAgent().hasMember(getGroupId(PERSONAL_AGENT_GROUP_NAME), agentId)) {
-			PersonalAgent agent = createAgent(PersonalAgent.class, agentId);
+			PersonalAgentIntf agent = createAgent(PersonalAgentIntf.class, PersonalAgent.class, agentId);
 			agent.setDomainAgentId(getId());
 			try {
 				addMemberToGroup(PERSONAL_AGENT_GROUP_NAME, agentId);
@@ -215,10 +240,16 @@ public class DomainAgent extends Agent {
 	
 	// Team agent section
 	
+	public void moveTeam(@Name("id") String id, @Name("host") String host) {
+	    if(getGroupAgent().hasMember(getGroupId(TEAM_AGENT_GROUP_NAME), id)) {
+	        
+	    }
+	}
+	
 	public String createTeamAgent(@Name("name") String name) {
 				
 		Team team = new Team(name);
-		TeamAgent agent = createAgent(TeamAgent.class, name);
+		TeamAgentIntf agent = createAgent(TeamAgentIntf.class, TeamAgent.class, name);
 		agent.setDomainAgentId(getId());
 		agent.setTeam(team);
 		String agentId = agent.getId();
@@ -281,6 +312,14 @@ public class DomainAgent extends Agent {
 		}
 	}
 	
+	protected TeamAgentIntf getTeamAgent(String teamId) {
+	    return getAgent( teamId, TeamAgentIntf.class );
+	}
+	
+	protected URI getTeamAgentUrl(String teamId) {
+            return getAgentUrl( teamId);
+        }
+	
 	// End Team agent section
 	
 	public URI getMappedAgentUrl(@Name("id")  String id) {
@@ -291,7 +330,7 @@ public class DomainAgent extends Agent {
 	
 	public String createClientGroupAgent(@Name("name") String name) {
 		
-		ClientGroupAgent agent = createAgent(ClientGroupAgent.class, name);
+		ClientGroupAgentIntf agent = createAgent(ClientGroupAgentIntf.class, ClientGroupAgent.class, name);
 		String agentId = agent.getId();
 		agent.setDomainAgentId(getId());
 		agent.setName(name);
@@ -402,7 +441,7 @@ public class DomainAgent extends Agent {
 		String groupAgentId = getState().get("groupAgentId", String.class);
 		// If the id doesn't exists the agent doesn't exists so create it
 		if(groupAgentId==null) {
-			GroupAgent agent = createAgent(GroupAgent.class, GROUP_AGENT_PREFIX + getId());
+			GroupAgentIntf agent = createAgent(GroupAgentIntf.class, GroupAgent.class, GROUP_AGENT_PREFIX + getId());
 			groupAgentId = agent.getId();
 			getState().put("groupAgentId", groupAgentId);
 		}
@@ -482,6 +521,25 @@ public class DomainAgent extends Agent {
             return allTasks;
 	}
 	
+	public boolean moveTeamToHost(@Name("teamId") String teamId, @Name("host") String host) throws IOException {
+	    if(getTeamIds().contains( teamId )) {
+	        
+	        ObjectNode params = JOM.createObjectNode();
+	        params.put( "host", host);
+	        
+	        if(callSync(getTeamAgentUrl( teamId ), "moveChildrenToHost", params, Boolean.class)) {
+	            return moveAgent( teamId, host );
+	        }
+	    }
+	    
+	    return false;
+	}
+	
+	// FIXME: implement
+	public boolean moveChildrenToHost(@Name("host") String host ) {
+            return true;
+        }
+	
 	public void purge() {
 		
 		// Delete personal agents
@@ -497,6 +555,6 @@ public class DomainAgent extends Agent {
 		removeGroupAgent();
 		
 		
-		destroy();
+		destroy(false);
 	}
 }

@@ -226,8 +226,13 @@ public class GroupAgent extends Agent implements GroupAgentIntf {
 	private void setGroupMap(HashMap<String, Group> groups) {
 		getState().put("groups", groups);
 	}
+	
+	// FIXME: implement
+	public boolean moveChildrenToHost(@Name("host") String host ) {
+            return true;
+        }
 
 	public void purge() {
-		destroy();
+		destroy(false);
 	}
 }

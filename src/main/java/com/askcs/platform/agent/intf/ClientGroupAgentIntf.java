@@ -7,6 +7,10 @@ import com.askcs.platform.entity.Task;
 import com.askcs.platform.entity.Team;
 
 public interface ClientGroupAgentIntf extends AgentInterface {
+    
+    public void setDomainAgentId( @Name( "agentId" ) String agentId );
+    
+    public void setName( @Name( "name" ) String name );
 
     public void addTeam(@Name("teamId") String teamId);
     

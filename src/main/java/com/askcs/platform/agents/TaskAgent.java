@@ -31,7 +31,11 @@ public class TaskAgent extends Agent implements TaskAgentIntf {
 		getState().put("task", task);
 	}
 	
+	public boolean moveChildrenToHost(@Name("host") String host ) {
+	    return true;
+	}
+	
 	public void purge() {
-		destroy();
+		destroy(false);
 	}
 }

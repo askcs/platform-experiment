@@ -1,42 +1,38 @@
 package com.askcs.platform.agents;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
-import com.almende.eve.agent.AgentBuilder;
 import com.almende.eve.agent.AgentConfig;
 import com.almende.eve.config.Config;
+import com.almende.eve.protocol.jsonrpc.annotation.Name;
+import com.almende.util.callback.AsyncCallback;
+import com.almende.util.jackson.JOM;
 import com.askcs.platform.agent.intf.AgentInterface;
+import com.askcs.platform.agent.intf.HostAgentIntf;
 import com.askcs.platform.listener.AgentTemplate;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class Agent extends com.almende.eve.agent.Agent implements AgentInterface {
+public abstract class Agent extends com.almende.eve.agent.Agent implements AgentInterface {
     private static final Logger    LOG     = Logger.getLogger(Agent.class.getName());
-	
-    public <T extends Agent> T createAgent( Class<T> agentClass, String agentId ) {
-        return createAgent( agentClass, agentId, AgentTemplate.DEFAULT );
+    
+    @Override
+    protected void onReady() {
+        LOG.info("Loaded agent: "+getId());
     }
 	
-    public <T extends Agent> T createAgent( Class<T> agentClass, String agentId, AgentTemplate template ) {
-
-        //if ( !agentExists( agentId ) ) {
-            
-            final AgentConfig agentConfig = new AgentConfig();
-            agentConfig.put("extends", "templates/"+template.getName() );
-            agentConfig.setClassName( agentClass.getName() );
-            agentConfig.setId( agentId );
-
-            Agent newAgent = (Agent) new AgentBuilder()
-                .withConfig( agentConfig ).build();
-
-            return (T) newAgent;
-        /*}
-
-        LOG.warning( "Failed to create agent because it already exists (In initService)" );
-
-        return null;*/
+    public <I extends AgentInterface> I createAgent( Class<I> agentInterface, Class agentClass, String agentId ) {
+        if(getHostAgent().createLocalAgent( agentClass.getName(), agentId, AgentTemplate.DEFAULT )) {
+            return createAgentProxy( getLocalAgentUrl( agentId ), agentInterface );
+        }
+        
+        return null;
     }
 
     public void setResource( String key, Object value ) {
@@ -49,7 +45,7 @@ public class Agent extends com.almende.eve.agent.Agent implements AgentInterface
         }
     }
 
-    public Object getResource( String key ) {
+    public Object getResource(@Name("key")  String key ) {
         return getState().get( "resource_" + key, Object.class );
     }
 
@@ -66,6 +62,78 @@ public class Agent extends com.almende.eve.agent.Agent implements AgentInterface
         return resources;
     }
     
+    public abstract boolean moveChildrenToHost(@Name("host") String host );
+    
+    protected boolean moveAgentSet(Set<String> agentIds, final String host) {
+        
+        final AtomicBoolean result = new AtomicBoolean( true );
+        final CountDownLatch count = new CountDownLatch( agentIds.size() );
+        if(count.getCount() > 0) {
+            ObjectNode params = JOM.createObjectNode();
+            params.put( "host", host );
+            
+            // Move agents children
+            for ( String agentId : agentIds ) {
+                try {
+                    URI url = getAgentUrl( agentId );
+                    call(url, "moveChildrenToHost", params, new AsyncCallback<Boolean>() {
+                        
+                        private String agentId = null;
+                        
+                        public void onSuccess( Boolean moved ) {
+                            if(agentId!=null) {
+                                try {
+                                    if(!moveAgent( agentId, host )) {
+                                        result.set( false );
+                                    }
+                                }
+                                catch ( IOException e ) {
+                                    e.printStackTrace();
+                                }
+                            } else {
+                                LOG.warning( "AgentId is still empty!!!" );
+                            }
+                            count.countDown();
+                        }
+    
+                        public void onFailure( Exception exception ) {
+                            count.countDown();
+                            result.set( false );
+                        }
+                        
+                        public AsyncCallback<Boolean> setAgentId( String agentId ) {
+                            this.agentId = agentId;
+                            return this;
+                        }
+                    }.setAgentId( agentId ) );
+                }
+                catch ( IOException e ) {
+                    LOG.warning( "Failed to load task e: " + e.getMessage() );
+                }
+            }
+            
+            try {
+                LOG.info( "Waiting for moving to finish" );
+                count.await();
+            }
+            catch ( InterruptedException e ) {
+                e.printStackTrace();
+            }
+        }
+        
+        return result.get();
+    }
+    
+    protected boolean moveAgent(final String id, final String host) throws IOException {
+        /*ObjectNode params = JOM.createObjectNode();
+        params.put( "id", id );
+        params.put( "host", host );
+        
+        return callSync(getHostAgentUrl(), "moveAgentToHost", params, Boolean.class);*/
+        
+        return getHostAgent().moveAgentToHost( id, host );
+    }
+    
     protected AgentConfig getAgentConfig(AgentTemplate template) {
         ObjectNode agentConfig = null;
         try {
@@ -80,10 +148,18 @@ public class Agent extends com.almende.eve.agent.Agent implements AgentInterface
         return AgentConfig.decorate( agentConfig );
     }
     
+    protected HostAgentIntf getHostAgent() {
+        return getLocalAgent( "host_agent", HostAgentIntf.class );
+    }
+    
+    protected URI getHostAgentUrl(){
+        return getLocalAgentUrl( "host_agent" );
+    }
+    
     protected boolean agentExists(String id) {
         try {
-            AgentInterface agent = getAgent( id, AgentInterface.class );
-            return agent.exists();
+            HostAgentIntf hostAgent = getHostAgent();
+            return hostAgent.exists( id );
         } catch (Exception e) {
             LOG.warning( "Failed to call agent: " + id + " e: " + e.getMessage() );
         }
@@ -107,12 +183,23 @@ public class Agent extends com.almende.eve.agent.Agent implements AgentInterface
     protected <T extends AgentInterface> T getLocalAgent( String id, Class<T> agentInterface ) {
         return createAgentProxy( getLocalAgentUrl( id ), agentInterface );
     }
-
-    public boolean exists() {
-        return true;
+    
+    protected URI getHttpUrl() {
+        List<URI> urls = getUrls();
+        for(URI url : urls) {
+            if(url.getScheme().equals( "http" ) || url.getScheme().equals( "https" )) {
+                return url;
+            }
+        }
+        
+        return null;
+    }
+    
+    public void deinstantiate() {
+        destroy(true);
     }
 
     public void purge() {
-        destroy();
+        destroy(false);
     }
 }

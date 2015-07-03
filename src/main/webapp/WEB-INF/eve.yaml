@@ -1,7 +1,7 @@
 templates:
    baseAgent:
       transports:
-         - class: com.almende.eve.transport.http.HttpTransportBuilder
+         - builder: com.almende.eve.transport.http.HttpTransportBuilder
            servletClass: com.almende.eve.transport.http.DebugServlet
            servletUrl: http://localhost:8080/agents/
            doAuthentication: false
@@ -9,32 +9,38 @@ templates:
            servletLauncher: JettyLauncher
            jetty: 
              port: 8080
-         - class: com.almende.eve.algorithms.clustering.GlobalAddressTransportBuilder
+         - builder: com.almende.eve.algorithms.clustering.GlobalAddressTransportBuilder
            realAddressPattern: http://localhost:8080/agents/
    defaultAgent:
       state:
-         class: com.almende.eve.state.file.FileStateBuilder
+         builder: com.almende.eve.state.file.FileStateBuilder
          path: .eveagents
       scheduler:
-         class: com.almende.eve.scheduling.PersistentSchedulerBuilder
+         builder: com.almende.eve.scheduling.PersistentSchedulerBuilder
          state:
-            class: com.almende.eve.state.file.FileStateBuilder
+            builder: com.almende.eve.state.file.FileStateBuilder
             path: .evescheduler
       instantiationService:
          state:
-            class: com.almende.eve.state.file.FileStateBuilder
+            builder: com.almende.eve.state.file.FileStateBuilder
             path: .eveinit_8080
       protocols:
-      - class: com.almende.eve.algorithms.clustering.GlobalAddressProtocolBuilder
+        - builder: com.almende.eve.algorithms.clustering.GlobalAddressProtocolBuilder
       extends: templates/baseAgent
 
 agents:
--  id: ask_mgmt
-   class: com.askcs.platform.agents.ManagementAgent
+-  id: host_agent
+   class: com.askcs.platform.agents.HostAgent
    extends: templates/baseAgent
    
-instantiationServices:
-- state:
-    class: com.almende.eve.state.file.FileStateBuilder
+#instantiationServices:
+#- state:
+#    class: com.almende.eve.state.file.FileStateBuilder
+#    path: .eveinit_8080
+#    id: InitService
+    
+instantiationService:
+  state:
+    builder: com.almende.eve.state.file.FileStateBuilder
     path: .eveinit_8080
     id: InitService

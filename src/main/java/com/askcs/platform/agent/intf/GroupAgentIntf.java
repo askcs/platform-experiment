@@ -8,7 +8,7 @@ import com.almende.eve.protocol.jsonrpc.annotation.Name;
 import com.askcs.platform.entity.Group;
 
 @Access(AccessType.PUBLIC)
-public interface GroupAgentIntf {
+public interface GroupAgentIntf extends AgentInterface {
 
 	/**/
     // location/domain specific calls
