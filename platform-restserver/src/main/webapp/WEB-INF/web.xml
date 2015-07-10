@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+	id="WebApp_ID" version="3.0">
+   <servlet>
+      <servlet-name>EveServlet</servlet-name>
+      <servlet-class>com.almende.eve.transport.http.DebugServlet</servlet-class>
+      <init-param>
+         <param-name>ServletUrl</param-name>
+         <param-value>http://localhost:9000/agents/</param-value>
+      </init-param>
+      <load-on-startup>1</load-on-startup>
+   </servlet>
+   <servlet-mapping>
+      <servlet-name>EveServlet</servlet-name>
+      <url-pattern>/agents/*</url-pattern>
+   </servlet-mapping>
+   
+   
+	<servlet>
+		<servlet-name>RESTServer</servlet-name>
+		<servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
+		<init-param>
+		    <param-name>javax.ws.rs.Application</param-name>
+		    <param-value>com.askcs.platform.restserver.RestApplication</param-value>
+		</init-param>
+		<!-- <init-param>
+			<param-name>jersey.config.server.provider.packages</param-name>
+			<param-value>com.askcs.platform.resources</param-value>
+		</init-param>
+		<init-param>
+		    <param-name>jersey.config.server.provider.classnames</param-name>
+		    <param-value>
+		        com.askcs.platform.exceptionhandling.NotFoundExceptionMapper
+		    </param-value>
+		</init-param>-->
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>RESTServer</servlet-name>
+		<url-pattern>/api/*</url-pattern>
+	</servlet-mapping>
+	
+	<filter>
+		<filter-name>authenticationFilter</filter-name>
+		<filter-class>com.askcs.platform.filters.AuthenticationFilter</filter-class>
+	</filter>
+	<filter-mapping>
+		<filter-name>authenticationFilter</filter-name>
+		<servlet-name>RESTServer</servlet-name>
+	</filter-mapping>
+	
+</web-app>
+

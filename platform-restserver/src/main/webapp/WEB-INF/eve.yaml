@@ -1,0 +1,22 @@
+templates:
+   baseAgent:
+      transports:
+         - builder: com.almende.eve.transport.http.HttpTransportBuilder
+           servletClass: com.almende.eve.transport.http.DebugServlet
+           servletUrl: http://localhost:9000/agents/
+           doAuthentication: false
+           doShortcut: true
+         - builder: com.almende.eve.algorithms.clustering.GlobalAddressTransportBuilder
+           realAddressPattern: http://localhost:9000/agents/
+   defaultAgent:
+      state:
+         builder: com.almende.eve.state.file.FileStateBuilder
+         path: .eveagents
+      protocols:
+        - builder: com.almende.eve.algorithms.clustering.GlobalAddressProtocolBuilder
+      extends: templates/baseAgent
+
+agents:
+-  id: host_agent
+   class: com.askcs.platform.restserver.agents.HostAgent
+   extends: templates/baseAgent

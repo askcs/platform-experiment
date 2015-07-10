@@ -1,108 +1,33 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-
 	<groupId>com.askcs.platform</groupId>
 	<artifactId>platform</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<packaging>jar</packaging>
+	<packaging>pom</packaging>
+	<name>PlatformExperiment</name>
+	<description>Collection of Ask Enabling Agents</description>
 
-	<properties>
-		<skipTests>true</skipTests>
-		<eve.version>3.2.0-SNAPSHOT</eve.version>
-		<maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
-		<java.version>1.7</java.version>
-		<jetty.version>9.2.3.v20140905</jetty.version>
-		<junit.version>4.11</junit.version>
-		<hazelcast.version>3.4.2</hazelcast.version>
-		<maven.shade.version>2.3</maven.shade.version>
-		<skipTests>true</skipTests>
-	</properties>
+	<organization>
+		<name>Ask Community Systems BV</name>
+		<url>http://www.ask-cs.com/</url>
+	</organization>
 
-	<dependencies>
-		<dependency>
-			<groupId>com.almende.eve</groupId>
-			<artifactId>eve-bundle-full-embed</artifactId>
-			<version>${eve.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.almende.eve</groupId>
-			<artifactId>eve-state-mongo</artifactId>
-			<version>${eve.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.almende.eve</groupId>
-			<artifactId>eve-algorithms-clustering</artifactId>
-			<version>${eve.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.eclipse.jetty</groupId>
-			<artifactId>jetty-maven-plugin</artifactId>
-			<version>${jetty.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>${junit.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-		    <groupId>com.hazelcast</groupId>
-		    <artifactId>hazelcast</artifactId>
-		    <version>${hazelcast.version}</version>
-		</dependency>
-	</dependencies>
+	<developers>
+		<developer>
+			<name>Sven Stam</name>
+			<id>sstam</id>
+			<email>sstam@ask-cs.com</email>
+			<organization>Ask Community Systems BV, the Netherlands</organization>
+			<url>http://www.ask-cs.com/</url>
+			<timezone>1</timezone>
+		</developer>
+	</developers>
 
-	<build>
-		<plugins>
-			<!-- Make compiler UTF-8/ISO-8859-1 aware, set JVM to 1.6+ -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>${maven-compiler-plugin.version}</version>
-				<configuration>
-					<source>${java.version}</source>
-					<target>${java.version}</target>
-					<encoding>UTF-8</encoding>
-					<compilerArguments>
-						<verbose />
-					</compilerArguments>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.eclipse.jetty</groupId>
-				<artifactId>jetty-maven-plugin</artifactId>
-				<version>${jetty.version}</version>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-shade-plugin</artifactId>
-				<version>${maven.shade.version}</version>
-				<configuration>
-					<transformers>
-						<transformer
-							implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-							<mainClass>com.askcs.platform.Server</mainClass>
-						</transformer>
-					</transformers>
-				</configuration>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>shade</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-	            <groupId>org.codehaus.mojo</groupId>
-	            <artifactId>exec-maven-plugin</artifactId>
-	            <version>1.2.1</version>
-	            <configuration>
-	                <mainClass>com.askcs.platform.Server</mainClass>
-	            </configuration>
-	        </plugin>
-		</plugins>
-	</build>
+	<modules>
+		<module>platform-commons</module>
+		<module>platform-agentserver</module>
+		<module>platform-restserver</module>
+	</modules>
+
 </project>
