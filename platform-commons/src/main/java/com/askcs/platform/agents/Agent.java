@@ -25,7 +25,7 @@ public abstract class Agent extends com.almende.eve.agent.Agent implements Agent
     
     @Override
     protected void onReady() {
-        LOG.info("Loaded agent: "+getId());
+        //LOG.info("Loaded agent: "+getId());
     }
 	
     public <I extends AgentInterface> I createAgent( Class<I> agentInterface, @SuppressWarnings( "rawtypes" ) Class agentClass, String agentId ) {

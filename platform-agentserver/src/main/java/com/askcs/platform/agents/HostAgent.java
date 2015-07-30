@@ -69,12 +69,10 @@ public class HostAgent extends Agent implements HostAgentIntf {
 
         if ( !exists( agentId ) ) {
             
-            ObjectNode config = JOM.createObjectNode();
-            config.put("extends", "templates/"+template.getName() );
-            
-            final AgentConfig agentConfig = AgentConfig.decorate(config);
+            final AgentConfig agentConfig = AgentConfig.create();
             agentConfig.setClassName( agentClassName );
             agentConfig.setId( agentId );
+            agentConfig.put("extends", "templates/"+template.getName() );
             
             is.register( agentConfig.getId(), agentConfig, agentConfig.getClassName() );
 
