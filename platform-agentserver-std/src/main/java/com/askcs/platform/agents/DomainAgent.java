@@ -55,7 +55,7 @@ public class DomainAgent extends Agent implements DomainAgentIntf {
 	    
             final int NR_TEAM_MEMBERS = 1;
             final int NR_CLIENTS = 100;
-            final int NR_TASKS = 100;
+            final int NR_TASKS = 500;
 
             // Create x teams
             int index = getTeamIds().size();

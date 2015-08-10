@@ -9,6 +9,8 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.beanutils.BeanUtils;
 
+import com.almende.eve.algorithms.clustering.GlobalAddressMappingNotFoundException;
+
 public class ErrorMessage{
         
         /** contains the same HTTP Status code returned by the server */
@@ -96,6 +98,12 @@ public class ErrorMessage{
             this.message = ex.getMessage();
             this.link = "https://jersey.java.net/apidocs/2.8/jersey/javax/ws/rs/BadRequestException.html";            
         }
+        
+        public ErrorMessage(GlobalAddressMappingNotFoundException ex){
+            this.status = Response.Status.NOT_FOUND.getStatusCode();
+            this.message = ex.getMessage();
+            this.link = "https://jersey.java.net/apidocs/2.8/jersey/javax/ws/rs/NotFoundException.html";            
+    }
 
         public ErrorMessage() {}
 }

@@ -29,7 +29,8 @@ templates:
       instantiationService:
          state:
             builder: com.almende.eve.state.file.FileStateBuilder
-            path: .eveinit_8081 
+            path: .eveinit_8081
+            id: InitService
       protocols:
         - builder: com.almende.eve.algorithms.clustering.GlobalAddressProtocolBuilder
       extends: templates/baseAgent

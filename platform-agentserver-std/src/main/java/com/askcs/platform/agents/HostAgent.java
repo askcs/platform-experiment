@@ -49,6 +49,7 @@ public class HostAgent extends Agent implements HostAgentIntf {
                             .decorate((ObjectNode) service);
             is = new InstantiationServiceBuilder().withConfig(isconfig).build();
             is.boot();
+            LOG.info( "Load host agent" );
         } else {
             LOG.warning( "No instantiation service loaded!" );
         }

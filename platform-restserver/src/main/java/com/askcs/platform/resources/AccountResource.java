@@ -1,5 +1,7 @@
 package com.askcs.platform.resources;
 
+import java.util.logging.Logger;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -14,6 +16,8 @@ import com.askcs.platform.resources.accounts.TasksResource;
 @Path("/accounts")
 public class AccountResource {
 
+    private static final Logger LOG = Logger.getLogger( AccountResource.class.getName() );
+    
     @GET
     @Path("{id}")
     @Produces(MediaType.APPLICATION_JSON)
