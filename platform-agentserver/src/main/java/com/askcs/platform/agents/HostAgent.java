@@ -2,7 +2,7 @@ package com.askcs.platform.agents;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Logger;
 
@@ -34,7 +34,7 @@ public class HostAgent extends Agent implements HostAgentIntf {
     private final Logger LOG = Logger.getLogger( HostAgent.class.getName() );
     private InstantiationService is = null;
     private HazelcastInstance hazelcast = null;
-    private List<String> agentHosts = null;
+    private Set<String> agentHosts = null;
     
     @Override
     protected void onReady() {
@@ -51,7 +51,7 @@ public class HostAgent extends Agent implements HostAgentIntf {
         }
         
         hazelcast = Hazelcast.getAllHazelcastInstances().iterator().next();
-        agentHosts = hazelcast.getList( "agentHosts" );
+        agentHosts = hazelcast.getSet( "agentHosts" );
         addToAgentHosts();
     }
     
@@ -137,7 +137,7 @@ public class HostAgent extends Agent implements HostAgentIntf {
         return is.exists( agentId );
     }
     
-    public List<String> getAgentHosts() {
+    public Set<String> getAgentHosts() {
         return agentHosts;
     }
     
