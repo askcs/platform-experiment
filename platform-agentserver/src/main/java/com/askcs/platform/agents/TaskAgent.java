@@ -7,6 +7,7 @@ import com.almende.eve.protocol.jsonrpc.annotation.AccessType;
 import com.almende.eve.protocol.jsonrpc.annotation.Name;
 import com.almende.util.TypeUtil;
 import com.askcs.platform.agent.intf.TaskAgentIntf;
+import com.askcs.platform.common.agents.Agent;
 import com.askcs.platform.entity.Task;
 
 @Access(AccessType.PUBLIC)

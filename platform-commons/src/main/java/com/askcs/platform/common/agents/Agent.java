@@ -1,4 +1,4 @@
-package com.askcs.platform.agents;
+package com.askcs.platform.common.agents;
 
 
 import java.io.IOException;
@@ -29,11 +29,13 @@ public abstract class Agent extends com.almende.eve.agent.Agent implements Agent
     }
 	
     public <I extends AgentInterface> I createAgent( Class<I> agentInterface, @SuppressWarnings( "rawtypes" ) Class agentClass, String agentId ) {
-        if(getHostAgent().createLocalAgent( agentClass.getName(), agentId, AgentTemplate.DEFAULT )) {
+        
+        /*if(getHostAgent().createLocalAgent( agentClass.getName(), agentId, AgentTemplate.DEFAULT )) {
             return createAgentProxy( getLocalAgentUrl( agentId ), agentInterface );
         }
         
-        return null;
+        return null;*/
+        return (I) HostAgent.getInstance().createAgent( agentClass, agentId, AgentTemplate.DEFAULT );
     }
 
     public void setResource( String key, Object value ) {

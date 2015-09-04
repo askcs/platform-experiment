@@ -36,8 +36,8 @@ templates:
       extends: templates/baseAgent
 
 agents:
--  id: host_agent
-   class: com.askcs.platform.agents.HostAgent
+-  id: ask_mgmt
+   class: com.askcs.platform.agents.DomainManagementAgent
    extends: templates/baseAgent
    
 #instantiationServices:

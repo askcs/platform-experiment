@@ -16,6 +16,7 @@
   <properties>
 		<skipTests>true</skipTests>
 		<eve.version>3.2.0-SNAPSHOT</eve.version>
+		<hazelcast.version>3.4.2</hazelcast.version>
 	</properties>
   
 	<dependencies>
@@ -23,6 +24,11 @@
 			<groupId>com.almende.eve</groupId>
 			<artifactId>eve-bundle-full-embed</artifactId>
 			<version>${eve.version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>com.hazelcast</groupId>
+		    <artifactId>hazelcast</artifactId>
+		    <version>${hazelcast.version}</version>
 		</dependency>
 	</dependencies>
 </project>

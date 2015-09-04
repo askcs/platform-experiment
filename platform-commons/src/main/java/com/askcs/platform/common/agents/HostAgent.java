@@ -1,11 +1,14 @@
-package com.askcs.platform.agents;
+package com.askcs.platform.common.agents;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.net.URI;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
+import com.almende.eve.agent.AgentBuilder;
 import com.almende.eve.agent.AgentConfig;
 import com.almende.eve.instantiation.InstantiationService;
 import com.almende.eve.instantiation.InstantiationServiceBuilder;
@@ -13,12 +16,9 @@ import com.almende.eve.instantiation.InstantiationServiceConfig;
 import com.almende.eve.protocol.jsonrpc.annotation.Access;
 import com.almende.eve.protocol.jsonrpc.annotation.AccessType;
 import com.almende.eve.protocol.jsonrpc.annotation.Name;
-import com.almende.eve.protocol.jsonrpc.annotation.Optional;
 import com.almende.util.callback.AsyncCallback;
 import com.almende.util.jackson.JOM;
-import com.almende.util.uuid.UUID;
 import com.askcs.platform.agent.intf.AgentInterface;
-import com.askcs.platform.agent.intf.DomainAgentIntf;
 import com.askcs.platform.agent.intf.HostAgentIntf;
 import com.askcs.platform.entity.AgentTemplate;
 import com.askcs.platform.util.GlobalConfig;
@@ -26,15 +26,32 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
-
 @Access(AccessType.PUBLIC)
 public class HostAgent extends Agent implements HostAgentIntf {
 
+    protected static final String HOST_AGENT_NAME = "host_agent";
+    
     private final Logger LOG = Logger.getLogger( HostAgent.class.getName() );
-    private InstantiationService is = null;
-    private HazelcastInstance hazelcast = null;
-    private Set<String> agentHosts = null;
+    protected static HostAgent INSTANCE;
+    protected InstantiationService is = null;
+    protected HazelcastInstance hazelcast = null;
+    protected Set<String> agentHosts = null;
+    
+    public HostAgent() {
+        
+    }
+    
+    public static HostAgent getInstance() {
+        if(INSTANCE==null) {
+            final AgentConfig agentConfig = AgentConfig.create();
+            agentConfig.setClassName( MethodHandles.lookup().lookupClass().getName() );
+            agentConfig.setId( HOST_AGENT_NAME );
+            agentConfig.put("extends", "templates/baseAgent" );
+
+            INSTANCE = (HostAgent) new AgentBuilder().withConfig(agentConfig).build();
+        }
+        return INSTANCE;
+    }
     
     @Override
     protected void onReady() {
@@ -55,14 +72,25 @@ public class HostAgent extends Agent implements HostAgentIntf {
         addToAgentHosts();
     }
     
-    public String createDomainAgent( @Name( "id" ) @Optional String id ) {
+    @SuppressWarnings( "unchecked" )
+    @Access(AccessType.PRIVATE)
+    public <T extends Agent> T createAgent(Class<T> agentClass, String agentId, AgentTemplate template ) {
+        
+        if ( !exists( agentId ) ) {
+            
+            final AgentConfig agentConfig = AgentConfig.create();
+            agentConfig.setClassName( agentClass.getName() );
+            agentConfig.setId( agentId );
+            agentConfig.put("extends", "templates/"+template.getName() );
+            
+            is.register( agentConfig.getId(), agentConfig, agentConfig.getClassName() );
 
-        if ( id == null ) {
-            id = ( new UUID() ).toString();
+            return (T) is.init( agentConfig.getId() );
         }
 
-        DomainAgentIntf da = createAgent(DomainAgentIntf.class, DomainAgent.class, id );
-        return da.getId();
+        LOG.warning( "Failed to create agent because it already exists (In initService)" );
+
+        return null;
     }
 
     public boolean createLocalAgent( @Name("agentClassName") String agentClassName, @Name("agentId") String agentId, 

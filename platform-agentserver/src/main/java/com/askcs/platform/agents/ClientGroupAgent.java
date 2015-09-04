@@ -15,7 +15,7 @@ import com.almende.util.jackson.JOM;
 import com.askcs.platform.agent.intf.ClientGroupAgentIntf;
 import com.askcs.platform.agent.intf.PersonalAgentIntf;
 import com.askcs.platform.agent.intf.TeamAgentIntf;
-import com.askcs.platform.agents.Agent;
+import com.askcs.platform.common.agents.Agent;
 import com.askcs.platform.entity.Task;
 import com.askcs.platform.entity.Team;
 import com.fasterxml.jackson.databind.node.ObjectNode;

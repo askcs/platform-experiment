@@ -16,6 +16,7 @@ import com.almende.util.callback.AsyncCallback;
 import com.almende.util.jackson.JOM;
 import com.askcs.platform.agent.intf.PersonalAgentIntf;
 import com.askcs.platform.agent.intf.TeamAgentIntf;
+import com.askcs.platform.common.agents.Agent;
 import com.askcs.platform.entity.Team;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 

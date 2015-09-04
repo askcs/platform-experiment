@@ -8,7 +8,7 @@ import com.almende.util.jackson.JOM;
 import com.askcs.platform.agent.intf.DomainAgentIntf;
 import com.askcs.platform.agent.intf.HostAgentIntf;
 import com.askcs.platform.agent.intf.PersonalAgentIntf;
-import com.askcs.platform.agents.Agent;
+import com.askcs.platform.common.agents.Agent;
 import com.askcs.platform.entity.AgentTemplate;
 import com.askcs.platform.entity.Task;
 import com.askcs.platform.entity.User;

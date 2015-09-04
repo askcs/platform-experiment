@@ -15,6 +15,8 @@ import org.eclipse.jetty.webapp.WebAppContext;
 import com.almende.eve.algorithms.clustering.GlobalAddressMapper;
 import com.almende.eve.deploy.Boot;
 import com.hazelcast.config.Config;
+import com.hazelcast.config.JoinConfig;
+import com.hazelcast.config.NetworkConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 
@@ -31,6 +33,11 @@ public class RestServer {
         String configFileName = args[0];
         try {
             Config cfg = new Config();
+            NetworkConfig network = cfg.getNetworkConfig();
+            JoinConfig join = network.getJoin();
+            join.getMulticastConfig().setEnabled( false );
+            join.getTcpIpConfig().setEnabled( true )
+                        .addMember( "192.168.128.0-255" );
             HazelcastInstance instance = Hazelcast.newHazelcastInstance( cfg );
             LOG.info( "Hazelcast name: " + instance.getName());
             Map<String, URI> map = instance.getMap( "agentMapper" );

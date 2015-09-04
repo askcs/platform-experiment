@@ -15,6 +15,7 @@ import com.almende.util.callback.AsyncCallback;
 import com.almende.util.jackson.JOM;
 import com.askcs.platform.agent.intf.PersonalAgentIntf;
 import com.askcs.platform.agent.intf.TaskAgentIntf;
+import com.askcs.platform.common.agents.Agent;
 import com.askcs.platform.entity.Client;
 import com.askcs.platform.entity.Task;
 import com.askcs.platform.entity.User;

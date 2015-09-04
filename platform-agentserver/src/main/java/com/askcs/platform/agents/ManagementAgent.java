@@ -6,6 +6,7 @@ import com.almende.eve.protocol.jsonrpc.annotation.Name;
 import com.almende.eve.protocol.jsonrpc.annotation.Optional;
 import com.almende.util.uuid.UUID;
 import com.askcs.platform.agent.intf.DomainAgentIntf;
+import com.askcs.platform.common.agents.Agent;
 
 public class ManagementAgent extends Agent {
 

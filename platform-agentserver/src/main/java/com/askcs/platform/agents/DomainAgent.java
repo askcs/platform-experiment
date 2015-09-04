@@ -24,7 +24,7 @@ import com.askcs.platform.agent.intf.DomainAgentIntf;
 import com.askcs.platform.agent.intf.GroupAgentIntf;
 import com.askcs.platform.agent.intf.PersonalAgentIntf;
 import com.askcs.platform.agent.intf.TeamAgentIntf;
-import com.askcs.platform.agents.Agent;
+import com.askcs.platform.common.agents.Agent;
 import com.askcs.platform.entity.Client;
 import com.askcs.platform.entity.Group;
 import com.askcs.platform.entity.Task;
